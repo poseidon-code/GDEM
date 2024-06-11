@@ -9,4 +9,5 @@
 
 namespace Utility {
     extern void Reproject(std::string source_filepath, std::string destination_filepath, int16_t nodata_value);
+    extern void Reproject(GDALDataset* source_dataset, std::string destination_filepath, int16_t nodata_value);
 }
