@@ -327,3 +327,104 @@ void Utility::Merge(std::vector<std::string> source_filepaths, std::string desti
     for (GDALDataset *dataset : datasets) GDALClose(dataset);
     GDALClose(output_dataset);
 }
+
+
+
+void Utility::Merge(std::vector<GDALDataset*> source_datasets, std::string destination_filepath, int16_t nodata_value) {
+    GDALRegister_GTiff();
+
+    if (source_datasets.empty()) {
+        throw std::runtime_error("no input datasets provided");
+    }
+
+    // find the bounding box of the merged output
+    double min_x = std::numeric_limits<double>::max();
+    double min_y = std::numeric_limits<double>::max();
+    double max_x = std::numeric_limits<double>::lowest();
+    double max_y = std::numeric_limits<double>::lowest();
+    double cellsize_x = 0.0;
+    double cellsize_y = 0.0;
+
+    for (GDALDataset *dataset : source_datasets) {
+        double geotransform[6];
+        if (dataset->GetGeoTransform(geotransform) != CE_None) {
+            throw std::runtime_error("failed to get dataset transformations");
+        }
+
+        min_x = std::min(min_x, geotransform[0]);
+        min_y = std::min(min_y, geotransform[3] + dataset->GetRasterYSize() * geotransform[5]);
+        max_x = std::max(max_x, geotransform[0] + dataset->GetRasterXSize() * geotransform[1]);
+        max_y = std::max(max_y, geotransform[3]);
+        cellsize_x = std::max(cellsize_x, std::abs(geotransform[1]));
+        cellsize_y = std::max(cellsize_y, std::abs(geotransform[5]));
+    }
+
+    // create output file
+    GDALDriver *driver = GetGDALDriverManager()->GetDriverByName("GTiff");
+    GDALDataset *output_dataset = driver->Create(
+        destination_filepath.c_str(),
+        static_cast<int>((max_x - min_x) / cellsize_x),
+        static_cast<int>((max_y - min_y) / cellsize_y),
+        1,
+        GDT_Int16,
+        nullptr
+    );
+    output_dataset->GetRasterBand(1)->SetNoDataValue(nodata_value);
+
+    double output_geotransform[6] = {min_x, cellsize_x, 0, max_y, 0, -cellsize_y};
+    output_dataset->SetGeoTransform(output_geotransform);
+    output_dataset->SetProjection(source_datasets[0]->GetProjectionRef());
+
+    int rows = output_dataset->GetRasterYSize();
+    int columns = output_dataset->GetRasterXSize();
+
+    // merge
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < columns; j++) {
+            std::vector<int16_t> values;
+
+            double x = output_geotransform[0] + j * output_geotransform[1] + i * output_geotransform[2];
+            double y = output_geotransform[3] + j * output_geotransform[4] + i * output_geotransform[5];
+
+            for (GDALDataset *dataset : source_datasets) {
+                double geotransform[6];
+                if (dataset->GetGeoTransform(geotransform) != CE_None) {
+                    throw std::runtime_error("failed to get dataset transformations");
+                }
+
+                int x_index = static_cast<int>((x - geotransform[0]) / geotransform[1]);
+                int y_index = static_cast<int>((y - geotransform[3]) / geotransform[5]);
+
+                if (
+                    x_index >= 0 && x_index < dataset->GetRasterXSize()
+                    && y_index >= 0 && y_index < dataset->GetRasterYSize()
+                ) {
+                    int16_t value;
+
+                    if (dataset->GetRasterBand(1)->RasterIO(GF_Read, x_index, y_index, 1, 1, &value, 1, 1, GDT_Int16, 0, 0) != CE_None) {
+                        GDALClose(output_dataset);
+                        throw std::runtime_error("failed to read raster data");
+                    }
+                    
+                    values.push_back(value);
+                }
+            }
+
+            // add median of values
+            int16_t median;
+            if (values.size() == 0) {
+                median = source_datasets[0]->GetRasterBand(1)->GetNoDataValue();
+            } else {
+                std::sort(values.begin(), values.end());
+                median = values[values.size() / 2];
+            }
+
+            if (output_dataset->GetRasterBand(1)->RasterIO(GF_Write, j, i, 1, 1, &median, 1, 1, GDT_Int16, 0, 0) != CE_None) {
+                GDALClose(output_dataset);
+                throw std::runtime_error("failed to write raster data");
+            }
+        }
+    }
+
+    GDALClose(output_dataset);
+}
