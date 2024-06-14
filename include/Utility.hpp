@@ -12,4 +12,5 @@ namespace Utility {
     extern void Reproject(GDALDataset* source_dataset, std::string destination_filepath, int16_t nodata_value);
     extern void Merge(std::vector<std::string> source_filepaths, std::string destination_filepath, int16_t nodata_value);
     extern void Merge(std::vector<GDALDataset*> source_datasets, std::string destination_filepath, int16_t nodata_value);
+    extern void Clip(std::string source_filepath, std::string destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y);
 }

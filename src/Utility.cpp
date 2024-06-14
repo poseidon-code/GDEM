@@ -428,3 +428,97 @@ void Utility::Merge(std::vector<GDALDataset*> source_datasets, std::string desti
 
     GDALClose(output_dataset);
 }
+
+
+
+void Utility::Clip(std::string source_filepath, std::string destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+    GDALRegister_GTiff();
+
+    // open source file
+    GDALDataset *source_dataset = (GDALDataset *) GDALOpen(source_filepath.c_str(), GA_ReadOnly);
+    if (source_dataset == nullptr) {
+        throw std::runtime_error("failed to open source file");
+    }
+
+    double geotransform[6];
+    if (source_dataset->GetGeoTransform(geotransform) != CE_None) {
+        GDALClose(source_dataset);
+        throw std::runtime_error("failed to get dataset transformations");
+    }
+
+    int source_x_size = source_dataset->GetRasterXSize();
+    int source_y_size = source_dataset->GetRasterYSize();
+
+    // calculate pixel coordinates for the top left and bottom right coordinates
+    int start_x = static_cast<int>((top_left_x - geotransform[0]) / geotransform[1]);
+    int start_y = static_cast<int>((top_left_y - geotransform[3]) / geotransform[5]);
+    int end_x = static_cast<int>((bottom_right_x - geotransform[0]) / geotransform[1]);
+    int end_y = static_cast<int>((bottom_right_y - geotransform[3]) / geotransform[5]);
+
+    // ensure the pixel coordinates are within the bounds of the source dataset
+    start_x = std::max(0, std::min(start_x, source_x_size));
+    start_y = std::max(0, std::min(start_y, source_y_size));
+    end_x = std::max(0, std::min(end_x, source_x_size));
+    end_y = std::max(0, std::min(end_y, source_y_size));
+
+    int output_x_size = end_x - start_x;
+    int output_y_size = end_y - start_y;
+
+    if (output_x_size <= 0 || output_y_size <= 0) {
+        GDALClose(source_dataset);
+        throw std::runtime_error("invalid clipping coordinates");
+    }
+
+    // create output dataset
+    GDALDriver *driver = GetGDALDriverManager()->GetDriverByName("GTiff");
+    GDALDataset *output_dataset = driver->Create(
+        destination_filepath.c_str(), 
+        output_x_size, 
+        output_y_size, 
+        1, 
+        source_dataset->GetRasterBand(1)->GetRasterDataType(), 
+        nullptr
+    );
+
+    if (output_dataset == nullptr) {
+        GDALClose(source_dataset);
+        throw std::runtime_error("failed to create output dataset");
+    }
+
+    // calculate geotransform for the output dataset
+    double output_geotransform[6];
+    output_geotransform[0] = geotransform[0] + start_x * geotransform[1];
+    output_geotransform[1] = geotransform[1];
+    output_geotransform[2] = 0;
+    output_geotransform[3] = geotransform[3] + start_y * geotransform[5];
+    output_geotransform[4] = 0;
+    output_geotransform[5] = geotransform[5];
+    output_dataset->SetGeoTransform(output_geotransform);
+    output_dataset->SetProjection(source_dataset->GetProjectionRef());
+
+    // read and write data from source to output band
+    GDALRasterBand *source_band = source_dataset->GetRasterBand(1);
+    GDALRasterBand *output_band = output_dataset->GetRasterBand(1);
+
+    int data_type_size = GDALGetDataTypeSizeBytes(source_band->GetRasterDataType());
+    int buffer_size = output_x_size * output_y_size * data_type_size;
+    void *buffer = CPLMalloc(buffer_size);
+
+    if (source_band->RasterIO(GF_Read, start_x, start_y, output_x_size, output_y_size, buffer, output_x_size, output_y_size, source_band->GetRasterDataType(), 0, 0) != CE_None) {
+        CPLFree(buffer);
+        GDALClose(source_dataset);
+        GDALClose(output_dataset);
+        throw std::runtime_error("failed to read raster data");
+    }
+
+    if (output_band->RasterIO(GF_Write, 0, 0, output_x_size, output_y_size, buffer, output_x_size, output_y_size, output_band->GetRasterDataType(), 0, 0) != CE_None) {
+        CPLFree(buffer);
+        GDALClose(source_dataset);
+        GDALClose(output_dataset);
+        throw std::runtime_error("failed to write raster data");
+    }
+
+    CPLFree(buffer);
+    GDALClose(source_dataset);
+    GDALClose(output_dataset);
+}
