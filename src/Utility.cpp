@@ -659,3 +659,49 @@ void Utility::Resample(std::string source_filepath, std::string destination_file
     GDALClose(source_dataset);
     GDALClose(output_dataset);
 }
+
+
+
+void Utility::Resample(GDALDataset* source_dataset, std::string destination_filepath, unsigned int output_width, unsigned int output_height) {
+    GDALRegister_GTiff();
+
+    double geotransform[6];
+    if (source_dataset->GetGeoTransform(geotransform) != CE_None) {
+        throw std::runtime_error("failed to get dataset transformations");
+    }
+
+    // create output dataset
+    GDALDriver *driver = GetGDALDriverManager()->GetDriverByName("GTiff");
+    GDALDataset *output_dataset = driver->Create(
+        destination_filepath.c_str(),
+        output_width,
+        output_height,
+        source_dataset->GetRasterCount(),
+        source_dataset->GetRasterBand(1)->GetRasterDataType(),
+        nullptr
+    );
+
+    if (output_dataset == nullptr) {
+        throw std::runtime_error("failed to create output dataset");
+    }
+
+    // calculate geotransform for the output dataset
+    double output_geotransform[6];
+    output_geotransform[0] = geotransform[0];
+    output_geotransform[1] = (geotransform[1] * source_dataset->GetRasterXSize()) / output_width;
+    output_geotransform[2] = 0;
+    output_geotransform[3] = geotransform[3];
+    output_geotransform[4] = 0;
+    output_geotransform[5] = (geotransform[5] * source_dataset->GetRasterYSize()) / output_height;
+
+    output_dataset->SetGeoTransform(output_geotransform);
+    output_dataset->SetProjection(source_dataset->GetProjectionRef());
+
+    // resampling
+    if (GDALReprojectImage(source_dataset, nullptr, output_dataset, nullptr, GRA_Med, 0, 0, nullptr, nullptr, nullptr) != CE_None) {
+        GDALClose(output_dataset);
+        throw std::runtime_error("failed to resample dataset");
+    }
+
+    GDALClose(output_dataset);
+}
