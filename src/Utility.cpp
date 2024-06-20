@@ -705,3 +705,40 @@ void Utility::Resample(GDALDataset* source_dataset, std::string destination_file
 
     GDALClose(output_dataset);
 }
+
+
+
+std::vector<std::string> Utility::Coverage(const std::vector<std::string>& filepaths, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+    GDALRegister_GTiff();
+    std::vector<std::string> results;
+    
+    for (const std::string& filepath : filepaths) {
+        GDALDataset *dataset = (GDALDataset*) (GDALOpen(filepath.c_str(), GA_ReadOnly));
+        if (dataset == nullptr) {
+            continue;
+        }
+
+        double geotransform[6];
+        if (dataset->GetGeoTransform(geotransform) != CE_None) {
+            GDALClose(dataset);
+            continue;
+        }
+
+        double min_x = geotransform[0];
+        double max_x = geotransform[0] + dataset->GetRasterXSize() * geotransform[1];
+        double min_y = geotransform[3] + dataset->GetRasterYSize() * geotransform[5];
+        double max_y = geotransform[3];
+
+        // check if the dataset falls within the specified region
+        if (
+            max_x >= top_left_x && min_x <= bottom_right_x &&
+            max_y >= bottom_right_y && min_y <= top_left_y
+        ) {
+            results.push_back(filepath);
+        }
+
+        GDALClose(dataset);
+    }
+
+    return results;
+}
