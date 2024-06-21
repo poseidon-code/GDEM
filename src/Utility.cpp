@@ -12,7 +12,7 @@
 #include "Utility.hpp"
 
 
-void Utility::Reproject(std::string source_filepath, std::string destination_filepath, int16_t nodata_value) {
+void Utility::Reproject(const std::string& source_filepath, const std::string& destination_filepath, int16_t nodata_value) {
     GDALRegister_GTiff();
 
     // open source file
@@ -118,7 +118,7 @@ void Utility::Reproject(std::string source_filepath, std::string destination_fil
 }
 
 
-void Utility::Reproject(GDALDataset* source_dataset, std::string destination_filepath, int16_t nodata_value) {
+void Utility::Reproject(GDALDataset* source_dataset, const std::string& destination_filepath, int16_t nodata_value) {
     GDALRegister_GTiff();
 
     // get source projection systerm
@@ -212,7 +212,7 @@ void Utility::Reproject(GDALDataset* source_dataset, std::string destination_fil
 }
 
 
-void Utility::Merge(std::vector<std::string> source_filepaths, std::string destination_filepath, int16_t nodata_value) {
+void Utility::Merge(const std::vector<std::string>& source_filepaths, const std::string& destination_filepath, int16_t nodata_value) {
     GDALRegister_GTiff();
 
     if (source_filepaths.empty()) {
@@ -330,7 +330,7 @@ void Utility::Merge(std::vector<std::string> source_filepaths, std::string desti
 
 
 
-void Utility::Merge(std::vector<GDALDataset*> source_datasets, std::string destination_filepath, int16_t nodata_value) {
+void Utility::Merge(const std::vector<GDALDataset*>& source_datasets, const std::string& destination_filepath, int16_t nodata_value) {
     GDALRegister_GTiff();
 
     if (source_datasets.empty()) {
@@ -431,7 +431,7 @@ void Utility::Merge(std::vector<GDALDataset*> source_datasets, std::string desti
 
 
 
-void Utility::Clip(std::string source_filepath, std::string destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+void Utility::Clip(const std::string& source_filepath, const std::string& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
     GDALRegister_GTiff();
 
     // open source file
@@ -525,7 +525,7 @@ void Utility::Clip(std::string source_filepath, std::string destination_filepath
 
 
 
-void Utility::Clip(GDALDataset* source_dataset, std::string destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+void Utility::Clip(GDALDataset* source_dataset, const std::string& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
     GDALRegister_GTiff();
 
     double geotransform[6];
@@ -607,7 +607,7 @@ void Utility::Clip(GDALDataset* source_dataset, std::string destination_filepath
 
 
 
-void Utility::Resample(std::string source_filepath, std::string destination_filepath, unsigned int output_width, unsigned int output_height) {
+void Utility::Resample(const std::string& source_filepath, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height) {
     GDALRegister_GTiff();
 
     GDALDataset *source_dataset = (GDALDataset*) (GDALOpen(source_filepath.c_str(), GA_ReadOnly));
@@ -662,7 +662,7 @@ void Utility::Resample(std::string source_filepath, std::string destination_file
 
 
 
-void Utility::Resample(GDALDataset* source_dataset, std::string destination_filepath, unsigned int output_width, unsigned int output_height) {
+void Utility::Resample(GDALDataset* source_dataset, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height) {
     GDALRegister_GTiff();
 
     double geotransform[6];
