@@ -17,4 +17,5 @@ namespace Utility {
     extern void Resample(const std::string& source_filepath, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height);
     extern void Resample(GDALDataset* source_dataset, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height);
     extern std::vector<std::string> Coverage(const std::vector<std::string>& filepaths, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y);
+    extern std::vector<std::pair<double, double>> CoordinatesAlongPolygon(const std::vector<std::pair<double, double>>& polygon_points, double interval_arcseconds);
 }

@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <string>
@@ -741,4 +742,34 @@ std::vector<std::string> Utility::Coverage(const std::vector<std::string>& filep
     }
 
     return results;
+}
+
+
+
+std::vector<std::pair<double, double>> Utility::CoordinatesAlongPolygon(const std::vector<std::pair<double, double>>& polygon_points, double interval_arcseconds = 1.0) {
+    std::vector<std::pair<double, double>> coordinates;
+
+    auto coordinates_along_line = [interval_arcseconds, &coordinates] (double latitude_a, double longitude_a, double latitude_b, double longitude_b) -> void {
+        double distance = std::sqrt(std::pow(latitude_b - latitude_a, 2) + std::pow(longitude_b - longitude_a, 2));
+        int steps = static_cast<int>(distance / (interval_arcseconds / 3600.0));
+
+        for (int i = 0; i <= steps; ++i) {
+            double fraction = static_cast<double>(i) / steps;
+            double latitude = latitude_a + fraction * (latitude_b - latitude_a);
+            double longitude = longitude_a + fraction * (longitude_b - longitude_a);
+            coordinates.push_back({latitude, longitude});
+        }
+    };
+
+    int n = polygon_points.size();
+
+    for (int i = 0; i < n-1; i++) {
+        double latitude_a = polygon_points[i].first;
+        double longitude_a = polygon_points[i].second;
+        double latitude_b = polygon_points[i + 1].first;
+        double longitude_b = polygon_points[i + 1].second;
+        coordinates_along_line(latitude_a, longitude_a, latitude_b, longitude_b);
+    }
+
+    return coordinates;
 }
