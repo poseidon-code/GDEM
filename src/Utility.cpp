@@ -747,6 +747,10 @@ std::vector<std::string> Utility::Coverage(const std::vector<std::string>& filep
 
 
 std::vector<std::pair<double, double>> Utility::CoordinatesAlongPolygon(const std::vector<std::pair<double, double>>& polygon_points, double interval_arcseconds = 1.0) {
+    if (polygon_points.size() < 2) {
+        throw std::runtime_error("at least 2 points are required");
+    }
+
     std::vector<std::pair<double, double>> coordinates;
 
     auto coordinates_along_line = [interval_arcseconds, &coordinates] (double latitude_a, double longitude_a, double latitude_b, double longitude_b) -> void {
