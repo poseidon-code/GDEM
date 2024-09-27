@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.28)
-project(dem)
+project(GDEM LANGUAGES C CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,11 +11,11 @@ find_package(GDAL REQUIRED)
 
 
 # libdem
-set(LIBDEM_INCLUDE_DIRECTORY 
+set(LIBDEM_INCLUDE_DIRECTORY
     "include/"
     ${GDAL_INCLUDE_DIRS}
 )
-set(LIBDEM_SOURCES 
+set(LIBDEM_SOURCES
     "src/DEM.cpp"
     "src/Type.cpp"
     "src/Utility.cpp"
