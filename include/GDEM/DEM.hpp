@@ -120,6 +120,12 @@ private:
     std::filesystem::path file_path;
 
     void initialize(GDALDataset* dataset) {
+        if (dataset != nullptr) {
+            this->dataset = dataset;
+        } else {
+            throw std::runtime_error("dataset provided is NULL");
+        }
+
         if (raster_number > this->dataset->GetRasterCount()) {
             GDALClose(this->dataset);
             throw std::runtime_error("invalid raster band " + std::to_string(raster_number));
@@ -269,11 +275,11 @@ public:
         size_t r = static_cast<size_t>(std::round(rc.row));
         size_t c = static_cast<size_t>(std::round(rc.column));
 
-        r = r == this->type.nrows ? r - 1 : r;
-        c = c == this->type.ncols ? c - 1 : c;
+        r = r == this->type.rows ? r - 1 : r;
+        c = c == this->type.columns ? c - 1 : c;
 
         DataType altitude;
-        if (this->data->RasterIO(GF_Read, c, r, 1, 1, &altitude, 1, 1, this->type.data_type, 0, 0) != CE_None) {
+        if (this->data->RasterIO(GF_Read, c, r, 1, 1, &altitude, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None) {
             return this->type.nodata;
         } else {
             return altitude;
@@ -290,18 +296,18 @@ public:
         size_t r = static_cast<size_t>(rc.row);
         size_t c = static_cast<size_t>(rc.column);
 
-        float del_latitude = std::min(rc.row, static_cast<float>(this->type.rows-1)) - r;
-        float del_longitude = std::min(rc.column, static_cast<float>(this->type.columns-1)) - c;
+        float del_latitude = std::min(rc.row, static_cast<float>(this->type.rows - 1)) - r;
+        float del_longitude = std::min(rc.column, static_cast<float>(this->type.columns - 1)) - c;
 
-        size_t next_r = (r == this->type.nrows-1) ? r : r + 1;
-        size_t next_c = (c == this->type.ncols-1) ? c : c + 1;
+        size_t next_r = (r == this->type.rows - 1) ? r : r + 1;
+        size_t next_c = (c == this->type.columns - 1) ? c : c + 1;
 
         DataType m, n, o, p;
         if (
-            this->data->RasterIO(GF_Read,       c,          r,          1, 1, &m, 1, 1, this->type.data_type, 0, 0) != CE_None
-            || this->data->RasterIO(GF_Read,    c+next_c,   r,          1, 1, &n, 1, 1, this->type.data_type, 0, 0) != CE_None
-            || this->data->RasterIO(GF_Read,    c,          r+next_r,   1, 1, &o, 1, 1, this->type.data_type, 0, 0) != CE_None
-            || this->data->RasterIO(GF_Read,    c+next_c,   r+next_r,   1, 1, &p, 1, 1, this->type.data_type, 0, 0) != CE_None
+            this->data->RasterIO(GF_Read,       c,          r,          1, 1, &m, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None
+            || this->data->RasterIO(GF_Read,    next_c,     r,          1, 1, &n, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None
+            || this->data->RasterIO(GF_Read,    c,          next_r,     1, 1, &o, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None
+            || this->data->RasterIO(GF_Read,    next_c,     next_r,     1, 1, &p, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None
         ) {
             return this->type.nodata;
         } else {
