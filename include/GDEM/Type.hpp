@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <concepts>
 #include <cstdint>
 #include <filesystem>
@@ -71,12 +72,12 @@ private:
 public:
     size_t rows;                // no. of DEM values available in row
     size_t columns;             // no. of DEM values available in column
-    double y_min;               // bottom left latitude
-    double x_min;               // bottom left longitude
-    double y_max;               // top right latitude
-    double x_max;               // top right longitude
-    double y_resolution;        // distance (in radians) between every DEM values in row
-    double x_resolution;        // distance (in radians) between every DEM values in columns
+    float y_min;                // bottom left latitude
+    float x_min;                // bottom left longitude
+    float y_max;                // top right latitude
+    float x_max;                // top right longitude
+    float y_resolution;         // distance (in radians) between every DEM values in row
+    float x_resolution;         // distance (in radians) between every DEM values in columns
     DataType nodata;            // invalid DEM value representation
     std::string projection;     // projection of the dataset
     std::string data_type;      // datatype of the DEM values
