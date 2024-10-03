@@ -279,7 +279,7 @@ public:
         c = c == this->type.columns ? c - 1 : c;
 
         DataType altitude;
-        if (this->data->RasterIO(GF_Read, c, r, 1, 1, &altitude, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None) {
+        if (this->data->RasterIO(GF_Read, c, r, 1, 1, &altitude, 1, 1, this->type.data_type, 0, 0) != CE_None) {
             return this->type.nodata;
         } else {
             return altitude;
@@ -304,10 +304,10 @@ public:
 
         DataType m, n, o, p;
         if (
-            this->data->RasterIO(GF_Read,       c,          r,          1, 1, &m, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None
-            || this->data->RasterIO(GF_Read,    next_c,     r,          1, 1, &n, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None
-            || this->data->RasterIO(GF_Read,    c,          next_r,     1, 1, &o, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None
-            || this->data->RasterIO(GF_Read,    next_c,     next_r,     1, 1, &p, 1, 1, this->data->GetRasterDataType(), 0, 0) != CE_None
+            this->data->RasterIO(GF_Read,       c,          r,          1, 1, &m, 1, 1, this->type.data_type, 0, 0) != CE_None
+            || this->data->RasterIO(GF_Read,    next_c,     r,          1, 1, &n, 1, 1, this->type.data_type, 0, 0) != CE_None
+            || this->data->RasterIO(GF_Read,    c,          next_r,     1, 1, &o, 1, 1, this->type.data_type, 0, 0) != CE_None
+            || this->data->RasterIO(GF_Read,    next_c,     next_r,     1, 1, &p, 1, 1, this->type.data_type, 0, 0) != CE_None
         ) {
             return this->type.nodata;
         } else {

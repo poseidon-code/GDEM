@@ -66,7 +66,7 @@ private:
         this->y_max = transform[3];
         this->x_max = transform[0] + this->columns * this->x_resolution + this->rows * transform[2];
 
-        this->data_type = GDALGetDataTypeName(dataset->GetRasterBand(raster_number)->GetRasterDataType());
+        this->data_type = dataset->GetRasterBand(raster_number)->GetRasterDataType();
     }
 
 public:
@@ -80,7 +80,7 @@ public:
     float x_resolution;         // distance (in radians) between every DEM values in columns
     DataType nodata;            // invalid DEM value representation
     std::string projection;     // projection of the dataset
-    std::string data_type;      // datatype of the DEM values
+    GDALDataType data_type;     // datatype of the DEM values
 
 
     Type() = default;
@@ -140,7 +140,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const Type& o) {
         os
             << "Projection : " << o.projection << "\n"
-            << "Data Type : " << o.data_type << "\n"
+            << "Data Type : " << GDALGetDataTypeName(o.data_type) << "\n"
             << "Rows : " << o.rows << "\n"
             << "Columns : " << o.columns << "\n"
             << "Resolution (latitudinal, longitudinal) : (" << o.y_resolution << ", " << o.x_resolution << ")\n"
