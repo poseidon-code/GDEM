@@ -96,7 +96,7 @@ static void Metadata(const std::filesystem::path& file_path) {
 }
 
 
-void Reproject(GDALDataset* source_dataset, const std::string& destination_filepath, int16_t nodata_value) {
+static void Reproject(GDALDataset* source_dataset, const std::string& destination_filepath, int16_t nodata_value) {
     GDALRegister_GTiff();
 
     // get source projection systerm
@@ -189,7 +189,7 @@ void Reproject(GDALDataset* source_dataset, const std::string& destination_filep
 }
 
 
-void Reproject(const std::string& source_filepath, const std::string& destination_filepath, int16_t nodata_value) {
+static void Reproject(const std::string& source_filepath, const std::string& destination_filepath, int16_t nodata_value) {
     if (!std::filesystem::exists(source_filepath)) {
         std::string e = "file (" + source_filepath + ") not found";
         throw std::runtime_error(e);
@@ -210,23 +210,23 @@ void Reproject(const std::string& source_filepath, const std::string& destinatio
 }
 
 
-void Reproject(const std::filesystem::path& source_filepath, const std::string& destination_filepath, int16_t nodata_value) {
+static void Reproject(const std::filesystem::path& source_filepath, const std::string& destination_filepath, int16_t nodata_value) {
     Reproject(source_filepath.string(), destination_filepath, nodata_value);
 }
 
 
-void Reproject(const std::string& source_filepath, const std::filesystem::path& destination_filepath, int16_t nodata_value) {
+static void Reproject(const std::string& source_filepath, const std::filesystem::path& destination_filepath, int16_t nodata_value) {
     Reproject(source_filepath, destination_filepath.string(), nodata_value);
 }
 
 
-void Reproject(const std::filesystem::path& source_filepath, const std::filesystem::path& destination_filepath, int16_t nodata_value) {
+static void Reproject(const std::filesystem::path& source_filepath, const std::filesystem::path& destination_filepath, int16_t nodata_value) {
     Reproject(source_filepath.string(), destination_filepath.string(), nodata_value);
 }
 
 
 
-void Merge(const std::vector<GDALDataset*>& source_datasets, const std::string& destination_filepath, int16_t nodata_value) {
+static void Merge(const std::vector<GDALDataset*>& source_datasets, const std::string& destination_filepath, int16_t nodata_value) {
     GDALRegister_GTiff();
 
     if (source_datasets.empty()) {
@@ -327,7 +327,7 @@ void Merge(const std::vector<GDALDataset*>& source_datasets, const std::string& 
 }
 
 
-void Merge(const std::vector<std::string>& source_filepaths, const std::string& destination_filepath, int16_t nodata_value) {
+static void Merge(const std::vector<std::string>& source_filepaths, const std::string& destination_filepath, int16_t nodata_value) {
     if (source_filepaths.empty()) {
         throw std::runtime_error("no input file paths provided");
     }
@@ -353,7 +353,7 @@ void Merge(const std::vector<std::string>& source_filepaths, const std::string& 
 }
 
 
-void Merge(const std::vector<std::filesystem::path>& source_filepaths, const std::filesystem::path& destination_filepath, int16_t nodata_value) {
+static void Merge(const std::vector<std::filesystem::path>& source_filepaths, const std::filesystem::path& destination_filepath, int16_t nodata_value) {
     if (source_filepaths.empty()) {
         throw std::runtime_error("no input file paths provided");
     }
@@ -373,17 +373,17 @@ void Merge(const std::vector<std::filesystem::path>& source_filepaths, const std
 }
 
 
-void Merge(const std::vector<std::filesystem::path>& source_filepaths, const std::string& destination_filepath, int16_t nodata_value) {
+static void Merge(const std::vector<std::filesystem::path>& source_filepaths, const std::string& destination_filepath, int16_t nodata_value) {
     Merge(source_filepaths, std::filesystem::path(destination_filepath), nodata_value);
 }
 
 
-void Merge(const std::vector<std::string>& source_filepaths, const std::filesystem::path& destination_filepath, int16_t nodata_value) {
+static void Merge(const std::vector<std::string>& source_filepaths, const std::filesystem::path& destination_filepath, int16_t nodata_value) {
     Merge(source_filepaths, destination_filepath.string(), nodata_value);
 }
 
 
-void Clip(GDALDataset* source_dataset, const std::string& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+static void Clip(GDALDataset* source_dataset, const std::string& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
     GDALRegister_GTiff();
 
     double geotransform[6];
@@ -445,7 +445,7 @@ void Clip(GDALDataset* source_dataset, const std::string& destination_filepath, 
 
     int data_type_size = GDALGetDataTypeSizeBytes(source_band->GetRasterDataType());
     int buffer_size = output_x_size * output_y_size * data_type_size;
-    void *buffer = CPLMalloc(buffer_size);
+    static void *buffer = CPLMalloc(buffer_size);
 
     if (source_band->RasterIO(GF_Read, start_x, start_y, output_x_size, output_y_size, buffer, output_x_size, output_y_size, source_band->GetRasterDataType(), 0, 0) != CE_None) {
         CPLFree(buffer);
@@ -465,7 +465,7 @@ void Clip(GDALDataset* source_dataset, const std::string& destination_filepath, 
 }
 
 
-void Clip(const std::string& source_filepath, const std::string& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+static void Clip(const std::string& source_filepath, const std::string& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
     if (!std::filesystem::exists(source_filepath)) {
         std::string e = "file (" + source_filepath + ") not found";
         throw std::runtime_error(e);
@@ -486,22 +486,22 @@ void Clip(const std::string& source_filepath, const std::string& destination_fil
 }
 
 
-void Clip(const std::filesystem::path& source_filepath, const std::string& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+static void Clip(const std::filesystem::path& source_filepath, const std::string& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
     Clip(source_filepath.string(), destination_filepath, top_left_x, top_left_y, bottom_right_x, bottom_right_y);
 }
 
 
-void Clip(const std::string& source_filepath, const std::filesystem::path& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+static void Clip(const std::string& source_filepath, const std::filesystem::path& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
     Clip(source_filepath, destination_filepath.string(), top_left_x, top_left_y, bottom_right_x, bottom_right_y);
 }
 
 
-void Clip(const std::filesystem::path& source_filepath, const std::filesystem::path& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+static void Clip(const std::filesystem::path& source_filepath, const std::filesystem::path& destination_filepath, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
     Clip(source_filepath.string(), destination_filepath.string(), top_left_x, top_left_y, bottom_right_x, bottom_right_y);
 }
 
 
-void Resample(GDALDataset* source_dataset, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height) {
+static void Resample(GDALDataset* source_dataset, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height) {
     GDALRegister_GTiff();
 
     double geotransform[6];
@@ -547,7 +547,7 @@ void Resample(GDALDataset* source_dataset, const std::string& destination_filepa
 }
 
 
-void Resample(const std::string& source_filepath, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height) {
+static void Resample(const std::string& source_filepath, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height) {
     if (!std::filesystem::exists(source_filepath)) {
         std::string e = "file (" + source_filepath + ") not found";
         throw std::runtime_error(e);
@@ -568,22 +568,22 @@ void Resample(const std::string& source_filepath, const std::string& destination
 }
 
 
-void Resample(const std::filesystem::path& source_filepath, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height) {
+static void Resample(const std::filesystem::path& source_filepath, const std::string& destination_filepath, unsigned int output_width, unsigned int output_height) {
     Resample(source_filepath.string(), destination_filepath, output_width, output_height);
 }
 
 
-void Resample(const std::string& source_filepath, const std::filesystem::path& destination_filepath, unsigned int output_width, unsigned int output_height) {
+static void Resample(const std::string& source_filepath, const std::filesystem::path& destination_filepath, unsigned int output_width, unsigned int output_height) {
     Resample(source_filepath, destination_filepath.string(), output_width, output_height);
 }
 
 
-void Resample(const std::filesystem::path& source_filepath, const std::filesystem::path& destination_filepath, unsigned int output_width, unsigned int output_height) {
+static void Resample(const std::filesystem::path& source_filepath, const std::filesystem::path& destination_filepath, unsigned int output_width, unsigned int output_height) {
     Resample(source_filepath.string(), destination_filepath.string(), output_width, output_height);
 }
 
 
-std::vector<std::filesystem::path> Coverage(const std::vector<std::string>& filepaths, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+static std::vector<std::filesystem::path> Coverage(const std::vector<std::string>& filepaths, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
     GDALRegister_GTiff();
     std::vector<std::filesystem::path> results;
 
@@ -619,7 +619,7 @@ std::vector<std::filesystem::path> Coverage(const std::vector<std::string>& file
 }
 
 
-std::vector<std::filesystem::path> Coverage(const std::vector<std::filesystem::path>& filepaths, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
+static std::vector<std::filesystem::path> Coverage(const std::vector<std::filesystem::path>& filepaths, double top_left_x, double top_left_y, double bottom_right_x, double bottom_right_y) {
     std::vector<std::string> filepaths_s;
     for (std::filesystem::path path : filepaths) {
         filepaths_s.push_back(path.string());
@@ -629,7 +629,7 @@ std::vector<std::filesystem::path> Coverage(const std::vector<std::filesystem::p
 }
 
 
-std::vector<std::pair<float, float>> CoordinatesAlongPolygon(const std::vector<std::pair<float, float>>& polygon_points, float interval_arcseconds = 1.0) {
+static std::vector<std::pair<float, float>> CoordinatesAlongPolygon(const std::vector<std::pair<float, float>>& polygon_points, float interval_arcseconds = 1.0) {
     if (polygon_points.size() < 2) {
         throw std::runtime_error("at least 2 points are required");
     }
